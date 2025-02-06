@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Enhanced Speech to Text Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        #result {
+            height: 200px;
+            width: 100%;
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: #f9f9f9;
+            overflow-y: auto;
+            font-size: 18px;
+            text-align: left;
+            white-space: pre-line;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        #start-btn {
+            background: #4CAF50;
+        }
+        #start-btn:hover {
+            background: #45a049;
+        }
+        #stop-btn {
+            background: #ff4444;
+            display: none;
+        }
+        #stop-btn:hover {
+            background: #cc0000;
+        }
+        .status {
+            margin-top: 10px;
+            color: #666;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Enhanced Speech to Text Converter</h1>
+    <button id="start-btn" onclick="startRecording()">Start Recording</button>
+    <button id="stop-btn" onclick="stopRecording()">Stop Recording</button>
+    <div id="result"></div>
+    <div class="status" id="status">Click "Start Recording" to begin</div>
+
+    <script>
+        window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        window.SpeechGrammarList = window.SpeechGrammarList || window.webkitSpeechGrammarList;
+
+        const recognition = new SpeechRecognition();
+        const resultDiv = document.getElementById('result');
+        const statusDiv = document.getElementById('status');
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+
+        let isRecording = false;
+
+        // Enhanced Speech Recognition settings
+        recognition.continuous = true; 
+        recognition.interimResults = true;
+        recognition.lang = 'en-IN';
+        recognition.maxAlternatives = 5;
+
+        // Define a grammar to improve recognition accuracy
+        const grammar = '#JSGF V1.0; grammar words; public <word> = hello | world | speech | text | recognition | convert | record | stop | start | AI | technology | enhanced ;';
+        const speechGrammarList = new SpeechGrammarList();
+        speechGrammarList.addFromString(grammar, 1);
+        recognition.grammars = speechGrammarList;
+
+        let finalTranscript = "";
+
+        recognition.onresult = (event) => {
+            let interimTranscript = "";
+            
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript + ". ";
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+            }
+
+            resultDiv.innerHTML = `<strong>${finalTranscript}</strong><br><em>${interimTranscript}</em>`;
+        };
+
+        recognition.onerror = (event) => {
+            statusDiv.textContent = 'Error: ' + event.error;
+        };
+
+        recognition.onend = () => {
+            if (isRecording) {
+                recognition.start();
+            }
+        };
+
+        function startRecording() {
+            if (!isRecording) {
+                finalTranscript = ""; // Reset transcript
+                recognition.start();
+                isRecording = true;
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'inline-block';
+                statusDiv.textContent = 'Listening... Speak now!';
+            }
+        }
+
+        function stopRecording() {
+            recognition.stop();
+            isRecording = false;
+            startBtn.style.display = 'inline-block';
+            stopBtn.style.display = 'none';
+            statusDiv.textContent = 'Recording stopped.';
+        }
+    </script>
+</body>
+</html>
